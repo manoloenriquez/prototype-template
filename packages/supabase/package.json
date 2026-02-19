@@ -10,13 +10,13 @@
     "./mobile": "./src/mobile.ts"
   },
   "scripts": {
-    "lint": "eslint . --ext .ts --max-warnings 0",
+    "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.46.0",
-    "@supabase/ssr": "^0.5.0"
+    "@supabase/supabase-js": "^2.97.0",
+    "@supabase/ssr": "^0.8.0"
   },
   "devDependencies": {
     "typescript": "^5.6.0"
