@@ -9,12 +9,12 @@ A production-ready SaaS monorepo starter. Clone it, rename packages, and ship.
 | Layer       | Technology                          |
 |-------------|-------------------------------------|
 | Web         | Next.js 15 (App Router, TypeScript) |
-| Mobile      | Expo SDK 52 / React Native 0.76     |
+| Mobile      | Expo SDK 54 / React Native 0.81     |
 | Auth & DB   | Supabase (Postgres + RLS)           |
 | Storage     | Supabase Storage                    |
 | Monorepo    | Turborepo + pnpm workspaces         |
-| Type Safety | TypeScript 5.6, Zod                 |
-| Linting     | ESLint 8, Prettier 3                |
+| Type Safety | TypeScript 5.9, Zod 4               |
+| Linting     | ESLint 9, Prettier 3                |
 
 ## Repository Layout
 

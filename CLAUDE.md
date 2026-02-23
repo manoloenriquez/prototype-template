@@ -1,7 +1,53 @@
-# AGENTS.md — Monorepo AI Context
+# CLAUDE.md — Monorepo Project Context
 
-This file is authoritative context for AI agents working in this codebase.
+Authoritative context for Claude Code working in this codebase.
 Follow these rules strictly. Never deviate without explicit user instruction.
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Version |
+|---|---|---|
+| Web app | Next.js (App Router) | ^15.2 |
+| Mobile app | Expo + Expo Router | ~54 / ~6 |
+| UI language | React | ^19 |
+| Mobile runtime | React Native | ~0.81 |
+| Backend / DB | Supabase (Postgres + Auth + Storage) | ^2.97 |
+| Styling | Tailwind CSS | ^4 |
+| Validation | Zod | ^4 |
+| Types | TypeScript | ^5.9 |
+| Monorepo | Turborepo + pnpm | ^2.8 / 9.15 |
+
+---
+
+## Development Commands
+
+```bash
+# First-time setup
+pnpm install
+cp apps/web/.env.example apps/web/.env.local
+cp apps/mobile/.env.example apps/mobile/.env.local
+pnpm supabase start
+pnpm supabase db reset
+
+# Dev servers
+pnpm dev              # all apps in parallel
+pnpm dev:web          # Next.js only → http://localhost:3000
+pnpm dev:mobile       # Expo only
+
+# Database
+pnpm supabase migration new <name>
+pnpm supabase gen types typescript --local > packages/supabase/src/database.types.ts
+
+# Quality
+pnpm build
+pnpm lint
+pnpm typecheck
+pnpm format
+```
+
+Supabase Studio: http://localhost:54323
 
 ---
 
@@ -21,11 +67,42 @@ supabase/
   config.toml   Local Supabase config
 ```
 
+### Package Graph
+
+```
+apps/web   ──▶ @template/ui, @template/shared, @template/supabase
+apps/mobile──▶ @template/shared, @template/supabase
+```
+
 **Invariants:**
 - `packages/shared` must not import from any `apps/*` or other `packages/*`
 - `packages/supabase` must not import from `apps/*`
-- Server secrets (`SERVICE_ROLE_KEY`) must never be imported in `apps/web/src/app` server components or actions — they never need it; guards use the user's own JWT
+- `SERVICE_ROLE_KEY` must never appear in `apps/web/src/app` components or actions — use the user's own JWT via `createServerClient()`
 - All database mutations go through Supabase RLS — never bypass with service role from application code
+
+### Supabase Client Strategy
+
+| Context | Client | Module |
+|---|---|---|
+| Next.js Client Component | `createBrowserClient()` singleton | `@template/supabase/browser` |
+| Next.js Server Component / Action | `createServerClient(cookieAdapter)` | `@template/supabase/server` |
+| Next.js Middleware | Inline via `@supabase/ssr` | `apps/web/src/middleware.ts` |
+| Expo React Native | `createMobileClient({ storage })` | `@template/supabase/mobile` |
+
+---
+
+## Environment Variables
+
+| Variable | Scope | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Web client | Client-safe |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Web client | Client-safe (RLS enforced) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Web server only | Bypasses RLS — never in client |
+| `NEXT_PUBLIC_APP_URL` | Web client | Base URL |
+| `EXPO_PUBLIC_SUPABASE_URL` | Mobile | Bundled into binary |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Mobile | Bundled into binary |
+
+Copy `.env.example` files — never commit `.env.local`.
 
 ---
 
@@ -109,8 +186,8 @@ Used for all Server Action return values and mobile auth context methods.
 1. **Schema first** — write a new migration in `supabase/migrations/` with RLS policies
 2. **Types** — update `packages/supabase/src/database.types.ts` to match
 3. **Server Actions (web)** — add `apps/web/src/app/actions/<domain>.ts`; validate with Zod; return `ApiResponse<T>`
-4. **Route guard** — if the route is protected or admin-only, add it to `apps/web/src/middleware.ts` matcher and use `requireAuth()`/`requireAdmin()` in the layout or page
-5. **UI** — Server Component for data display, `"use client"` component for interactive mutations; call `router.refresh()` after mutations
+4. **Route guard** — if protected/admin-only, add to `middleware.ts` and use `requireAuth()`/`requireAdmin()` in layout or page
+5. **UI** — Server Component for data display, `"use client"` for interactive mutations; call `router.refresh()` after mutations
 6. **Mobile (if applicable)** — add methods to `AuthContext` or create a new hook; screen in `app/(protected)/`
 7. **Shared constants** — add new route strings to `ROUTES` in `packages/shared/src/constants/index.ts`
 
@@ -120,14 +197,14 @@ Used for all Server Action return values and mobile auth context methods.
 
 Before marking any feature complete, verify:
 
-- [ ] RLS policies exist and are tested for both the user and admin roles
+- [ ] RLS policies exist and are tested for both user and admin roles
 - [ ] No `service_role` key used in application code
 - [ ] All Server Actions return `ApiResponse<T>`, never throw to the client
 - [ ] New tables/columns are reflected in `database.types.ts`
 - [ ] Zod validation in all Server Actions before DB operations
 - [ ] No `any` types introduced
 - [ ] `"use client"` only where strictly necessary
-- [ ] Protected routes guarded in both `middleware.ts` (web) and `RouteGuard` (mobile)
+- [ ] Protected routes guarded in both `middleware.ts` (web) and route guard (mobile)
 - [ ] `router.refresh()` called after all client-side mutations (web)
 - [ ] New routes added to `ROUTES` constants if referenced in more than one place
 - [ ] No secrets in client bundles (`NEXT_PUBLIC_*` only for public keys)

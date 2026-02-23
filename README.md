@@ -1,7 +1,7 @@
 # Prototype Template
 
 Production-ready SaaS monorepo starter.
-**Next.js 15 · Expo 52 · Supabase · Turborepo · pnpm**
+**Next.js 15 · Expo 54 · Supabase · Turborepo · pnpm**
 
 ---
 
@@ -109,7 +109,7 @@ pnpm supabase gen types typescript --local \
 .
 ├── apps/
 │   ├── web/               Next.js 15 (App Router)
-│   └── mobile/            Expo 52 (React Native)
+│   └── mobile/            Expo 54 (React Native)
 ├── packages/
 │   ├── ui/                Shared web UI components
 │   ├── shared/            Types, Zod schemas, constants
